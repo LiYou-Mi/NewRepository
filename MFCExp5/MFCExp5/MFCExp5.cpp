@@ -8,7 +8,6 @@
 #include "MFCExp5.h"
 #include "MainFrm.h"
 
-#include "ChildFrm.h"
 #include "MFCExp5Doc.h"
 #include "MFCExp5View.h"
 
@@ -33,8 +32,6 @@ END_MESSAGE_MAP()
 
 CMFCExp5App::CMFCExp5App()
 {
-	m_bHiColorIcons = TRUE;
-
 	// 支持重新启动管理器
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_ALL_ASPECTS;
 #ifdef _MANAGED
@@ -83,7 +80,7 @@ BOOL CMFCExp5App::InitInstance()
 
 	AfxEnableControlContainer();
 
-	EnableTaskbarInteraction();
+	EnableTaskbarInteraction(FALSE);
 
 	// 使用 RichEdit 控件需要 AfxInitRichEdit2()	
 	// AfxInitRichEdit2();
@@ -99,35 +96,17 @@ BOOL CMFCExp5App::InitInstance()
 	LoadStdProfileSettings(4);  // 加载标准 INI 文件选项(包括 MRU)
 
 
-	InitContextMenuManager();
-
-	InitKeyboardManager();
-
-	InitTooltipManager();
-	CMFCToolTipInfo ttParams;
-	ttParams.m_bVislManagerTheme = TRUE;
-	theApp.GetTooltipManager()->SetTooltipParams(AFX_TOOLTIP_TYPE_ALL,
-		RUNTIME_CLASS(CMFCToolTipCtrl), &ttParams);
-
 	// 注册应用程序的文档模板。  文档模板
 	// 将用作文档、框架窗口和视图之间的连接
-	CMultiDocTemplate* pDocTemplate;
-	pDocTemplate = new CMultiDocTemplate(IDR_MFCExp5TYPE,
+	CSingleDocTemplate* pDocTemplate;
+	pDocTemplate = new CSingleDocTemplate(
+		IDR_MAINFRAME,
 		RUNTIME_CLASS(CMFCExp5Doc),
-		RUNTIME_CLASS(CChildFrame), // 自定义 MDI 子框架
+		RUNTIME_CLASS(CMainFrame),       // 主 SDI 框架窗口
 		RUNTIME_CLASS(CMFCExp5View));
 	if (!pDocTemplate)
 		return FALSE;
 	AddDocTemplate(pDocTemplate);
-
-	// 创建主 MDI 框架窗口
-	CMainFrame* pMainFrame = new CMainFrame;
-	if (!pMainFrame || !pMainFrame->LoadFrame(IDR_MAINFRAME))
-	{
-		delete pMainFrame;
-		return FALSE;
-	}
-	m_pMainWnd = pMainFrame;
 
 
 	// 分析标准 shell 命令、DDE、打开文件操作的命令行
@@ -140,10 +119,10 @@ BOOL CMFCExp5App::InitInstance()
 	// 用 /RegServer、/Register、/Unregserver 或 /Unregister 启动应用程序，则返回 FALSE。
 	if (!ProcessShellCommand(cmdInfo))
 		return FALSE;
-	// 主窗口已初始化，因此显示它并对其进行更新
-	pMainFrame->ShowWindow(m_nCmdShow);
-	pMainFrame->UpdateWindow();
 
+	// 唯一的一个窗口已初始化，因此显示它并对其进行更新
+	m_pMainWnd->ShowWindow(SW_SHOW);
+	m_pMainWnd->UpdateWindow();
 	return TRUE;
 }
 
@@ -195,28 +174,6 @@ void CMFCExp5App::OnAppAbout()
 {
 	CAboutDlg aboutDlg;
 	aboutDlg.DoModal();
-}
-
-// CMFCExp5App 自定义加载/保存方法
-
-void CMFCExp5App::PreLoadState()
-{
-	BOOL bNameValid;
-	CString strName;
-	bNameValid = strName.LoadString(IDS_EDIT_MENU);
-	ASSERT(bNameValid);
-	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EDIT);
-	bNameValid = strName.LoadString(IDS_EXPLORER);
-	ASSERT(bNameValid);
-	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EXPLORER);
-}
-
-void CMFCExp5App::LoadCustomState()
-{
-}
-
-void CMFCExp5App::SaveCustomState()
-{
 }
 
 // CMFCExp5App 消息处理程序

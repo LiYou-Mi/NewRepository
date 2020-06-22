@@ -30,7 +30,10 @@ END_MESSAGE_MAP()
 CMFCExp5Doc::CMFCExp5Doc()
 {
 	// TODO: 在此添加一次性构造代码
-
+	m_crlRect.left = 200;
+	m_crlRect.right = 250;
+	m_crlRect.top = 200;
+	m_crlRect.bottom = 250;
 }
 
 CMFCExp5Doc::~CMFCExp5Doc()

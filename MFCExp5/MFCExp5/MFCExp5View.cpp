@@ -25,12 +25,9 @@ BEGIN_MESSAGE_MAP(CMFCExp5View, CView)
 	// 标准打印命令
 	ON_COMMAND(ID_FILE_PRINT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
-	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CMFCExp5View::OnFilePrintPreview)
-	ON_WM_CONTEXTMENU()
-	ON_WM_RBUTTONUP()
+	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
+	ON_WM_KEYDOWN()
 	ON_WM_LBUTTONDOWN()
-	ON_WM_LBUTTONUP()
-	ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
 
 // CMFCExp5View 构造/析构
@@ -59,22 +56,12 @@ void CMFCExp5View::OnDraw(CDC* pDC)
 {
 	CMFCExp5Doc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
-	if (!pDoc)
-		return;
-
 	// TODO: 在此处为本机数据添加绘制代码
+	pDC->Rectangle(pDoc->m_crlRect);
 }
 
 
 // CMFCExp5View 打印
-
-
-void CMFCExp5View::OnFilePrintPreview()
-{
-#ifndef SHARED_HANDLERS
-	AFXPrintPreview(this);
-#endif
-}
 
 BOOL CMFCExp5View::OnPreparePrinting(CPrintInfo* pInfo)
 {
@@ -90,19 +77,6 @@ void CMFCExp5View::OnBeginPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 void CMFCExp5View::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 {
 	// TODO: 添加打印后进行的清理过程
-}
-
-void CMFCExp5View::OnRButtonUp(UINT /* nFlags */, CPoint point)
-{
-	ClientToScreen(&point);
-	OnContextMenu(this, point);
-}
-
-void CMFCExp5View::OnContextMenu(CWnd* /* pWnd */, CPoint point)
-{
-#ifndef SHARED_HANDLERS
-	theApp.GetContextMenuManager()->ShowPopupMenu(IDR_POPUP_EDIT, point.x, point.y, this, TRUE);
-#endif
 }
 
 
@@ -130,39 +104,72 @@ CMFCExp5Doc* CMFCExp5View::GetDocument() const // 非调试版本是内联的
 // CMFCExp5View 消息处理程序
 
 
+void CMFCExp5View::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	CMFCExp5Doc*pDoc = GetDocument();
+	CRect clientRect;
+	GetClientRect(&clientRect);
+	switch (nChar)
+	{
+	case VK_LEFT:
+		if (pDoc->m_crlRect.left > 0)
+		{
+			pDoc->m_crlRect.left -= 5;
+			pDoc->m_crlRect.right -= 5;
+		}
+		break;
+	case VK_RIGHT:
+		if (pDoc->m_crlRect.right <= (clientRect.right - clientRect.left))
+		{
+			pDoc->m_crlRect.left += 5;
+			pDoc->m_crlRect.right += 5;
+		}
+		break;
+	case VK_UP:
+		if (pDoc->m_crlRect.top > 0)
+		{
+			pDoc->m_crlRect.top -= 5;
+			pDoc->m_crlRect.bottom -= 5;
+		}
+		break;
+	case VK_DOWN:
+		if (pDoc->m_crlRect.bottom <= (clientRect.bottom - clientRect.top))
+		{
+			pDoc->m_crlRect.bottom += 5;
+			pDoc->m_crlRect.top += 5;
+		}
+		break;
+	case VK_HOME:
+		if (pDoc->m_crlRect.left > 0 && pDoc->m_crlRect.top > 0)
+		{
+			pDoc->m_crlRect.left -= 5;
+			pDoc->m_crlRect.top -= 5;
+		}
+		break;
+	case VK_END:
+		if ((pDoc->m_crlRect.bottom <= (clientRect.bottom - clientRect.left))
+			&& pDoc->m_crlRect.right <= (clientRect.right - clientRect.left))
+		{
+			pDoc->m_crlRect.bottom += 5;
+			pDoc->m_crlRect.right += 5;
+		}
+	}
+
+	InvalidateRect(NULL, TRUE);
+	CView::OnKeyDown(nChar, nRepCnt, nFlags);
+	
+}
+
+
 void CMFCExp5View::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	CMFCExp5Doc *pDoc = GetDocument();
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
-
+	CMFCExp5Doc*pDoc = GetDocument();
 	CView::OnLButtonDown(nFlags, point);
-	a.x = point.x;
-}
-
-
-void CMFCExp5View::OnLButtonUp(UINT nFlags, CPoint point)
-{
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
-	CClientDC dc(this);
-	CView::OnLButtonUp(nFlags, point);
-	b.x = point.x;
-	int m = abs(b.x - a.x);
-	s2.Format(_T("%d"), m);
-	s3 = "横向移动像素个数";
-	dc.TextOutW(200, 250,s3 + s2);
-}
-
-
-void CMFCExp5View::OnMouseMove(UINT nFlags, CPoint point)
-{
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
-    count++;
-	CView::OnMouseMove(nFlags, point);
-	//pDC->TextOutW(100, 200, s1);
-	//wsprintf(s, "s1 %s  s0: %d");
-	CClientDC dc(this);
-	s1 = "MouseMove发生次数为：";
-	s0.Format(_T("%d"), count);
-	dc.TextOutW(200, 200, s1 + s0);
-	
+	pDoc->m_crlRect.left = 200;
+	pDoc->m_crlRect.right = 250;
+	pDoc->m_crlRect.top = 200;
+	pDoc->m_crlRect.bottom = 250;
+	InvalidateRect(NULL, TRUE);
 }
